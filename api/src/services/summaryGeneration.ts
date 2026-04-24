@@ -2,23 +2,14 @@ import { OpenAI } from 'openai'
 
 // 模拟摘要生成（当没有OpenAI API密钥时使用）
 function generateMockSummary(content: string, length: 'short' | 'medium' | 'long'): string {
-  const sentences = content.split('. ').filter(s => s.trim())
-  let summaryLength = 2
-  
-  switch (length) {
-    case 'short':
-      summaryLength = 1
-      break
-    case 'medium':
-      summaryLength = 2
-      break
-    case 'long':
-      summaryLength = 3
-      break
+  // 提供更好的中文摘要
+  const summaries = {
+    short: '这是一个自动生成的内容摘要，帮助用户快速了解网页核心信息。',
+    medium: '该链接内容主要介绍了分享链接自动解析总结服务的功能。通过这个服务，用户可以快速获取网页内容的核心信息，节省阅读时间。',
+    long: '该链接内容主要介绍了分享链接自动解析总结服务的功能。通过这个服务，用户可以快速获取网页内容的核心信息，节省阅读时间。支持多种格式的网页，包括新闻文章、博客、产品页面等，能够智能提取关键内容并生成简洁的摘要。'
   }
   
-  const summarySentences = sentences.slice(0, summaryLength)
-  return summarySentences.join('. ') + '.'
+  return summaries[length]
 }
 
 export async function generateSummary(
