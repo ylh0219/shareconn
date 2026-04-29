@@ -1,0 +1,72 @@
+version: "3.9"
+
+services:
+  # ===== FastAPI 应用 =====
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file: .env
+    depends_on:
+      - postgres
+      - redis
+      - qdrant
+    command: uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./app:/code/app
+    networks:
+      - shareconn
+
+  # ===== Celery Worker =====
+  celery-worker:
+    build: .
+    env_file: .env
+    depends_on:
+      - postgres
+      - redis
+    command: uv run celery -A app.tasks.celery_app worker --loglevel=info -c 4
+    volumes:
+      - ./app:/code/app
+    networks:
+      - shareconn
+
+  # ===== PostgreSQL =====
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: sharehelper
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - shareconn
+
+  # ===== Redis =====
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - shareconn
+
+  # ===== Qdrant 向量数据库 =====
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - shareconn
+
+volumes:
+  pgdata:
+  qdrant_data:
+
+networks:
+  shareconn:
+    driver: bridge
